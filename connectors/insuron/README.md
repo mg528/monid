@@ -1,47 +1,40 @@
 # Insuron connector
 
-This Deno 2 connector submits caller-attested insurance-matching objectives to
-`https://insuron.io/api` and reads public statuses for requests owned by an
-approved Insuron application. All usage is `FREE`.
+This Deno 2 connector submits a contactless insurance request through the open
+`POST https://insuron.io/api/open/requests` endpoint. It has no authentication
+credentials or authentication headers, and usage is `FREE`.
 
 ## File map
 
-- `provider.ts` — provider metadata, API base URL, and bearer auth.
-- `endpoints/create-request/endpoint.ts` — `POST /requests`; strict input
-  schema and run-stable `Idempotency-Key`.
-- `endpoints/request-status/endpoint.ts` — `GET /client/requests/{id}`; UUID
-  input validation and public-status output projection.
-- `endpoints/*/fixtures/synthetic-*.json` — synthetic replay-only responses,
-  including both 200 `needs_information` and 201 accepted outcomes.
-- `provider.test.ts` — replay and validation tests. No live API test is
+- `provider.ts` — provider metadata and API base URL.
+- `endpoints/create-request/endpoint.ts` — the only endpoint; validates the
+  request and projects the response to its public fields.
+- `endpoints/create-request/fixtures/synthetic-*.json` — synthetic replay-only
+  matched and unmatched responses.
+- `provider.test.ts` — replay and schema validation tests. No live API test is
   included.
 
-## Permission and safety gates
+## Open-access contactless submission
 
-The submission schema requires `consent: true` and a non-empty
-`consentReference`. These are a caller attestation and its audit reference;
-neither Insuron nor this connector independently verifies consumer consent.
-The caller is responsible for retaining auditable consent evidence.
-Permission to share a request does **not** authorize phone calls or SMS. This
-connector accepts no consumer name, phone, or email field and does not make
-calls, create quotes, or issue policies. The free-text `objective` and
-`consentReference` can still contain sensitive content; callers should avoid
-sending unnecessary sensitive information.
+The endpoint accepts only a product (`auto`, `home`, `renters`, `life`,
+`health`, or `commercial`), a valid US state/DC postal code, and optional
+bounded structured `details`: `age` (0–120), `driverAge` (16–120),
+`currentlyInsured`, `vehicles` (1–20), `tobacco`, `propertyType`
+(`single_family`, `condo`, `townhouse`, `mobile_home`, `apartment`, or `other`),
+`householdSize` (1–20), and `employeeCount` (0–100000). Detail fields must be
+relevant to the selected product. Unknown fields and free text are rejected.
+Personal names, phone numbers, email addresses, consent references, and consent
+attestations are not accepted.
 
-The POST endpoint projects its response to public status fields and preserves
-both API outcomes: HTTP 200 `needs_information` does not create a request;
-HTTP 201 means accepted. The connector requires the current API's one
-conditional field (`consentReference`) up front, so 200 is only expected if
-Insuron adds more qualification requirements later. Status reads use only the
-`/client/requests/{id}` application-scoped route, with a UUID id; the Insuron
-API enforces ownership and returns 404 for requests not owned by the approved
-application. The connector projects the response to public status fields.
+Open access does not mean approval or consent attestation: the API requires no
+application approval, and submission does not attest that consent was obtained.
+The Monid caller is responsible for its own data-sharing compliance before
+sending data. The request carries no consumer contact details, so it does not
+enable actual phone contact. `awaiting_agent` indicates an agent offer is
+available; the offer is not an accepted connection. `review_required` indicates
+no matched offer and further review is required. The response is limited to
+`id`, `status`, `product`, `state`, and `createdAt`.
 
-The bearer credential scopes to an approved Insuron **APPLICATION**, not to a
-Monid agent or workspace. Hosted Monid credential-to-application isolation is
-**NOT VERIFIED**. Do not use the live network or share any credential until the
-host confirms the credential-to-app mapping, Insuron has approved the
-application, and the caller retains auditable consent evidence. Monid's
-canonical environment convention for this provider's `apiKey` credential is
-`INSURON_CREDENTIALS_API_KEY` (with the standard `INSURON_API_KEY` alias);
-local testing uses synthetic test credentials only.
+Partner matching is based on a verified license for the requested state and
+the requested insurance line. This connector offers no request-status lookup
+endpoint and makes no idempotency guarantee.

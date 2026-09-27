@@ -1,0 +1,24 @@
+{
+    "name": "synthetic-insurance-request-matched",
+    "description": "Synthetic public POST /open/requests matched response. No live request or credentials were used.",
+    "calls": [
+        {
+            "req": {
+                "method": "POST",
+                "url": "{{request.url}}"
+            },
+            "res": {
+                "status": 201,
+                "body": {
+                    "id": "89f2833d-6f0d-4ae0-8fb2-33b02ca03eb9",
+                    "status": "awaiting_agent",
+                    "product": "auto",
+                    "state": "CA",
+                    "createdAt": "2026-01-01T00:00:00.000Z",
+                    "partnerName": "Synthetic licensed professional",
+                    "contact": null
+                }
+            }
+        }
+    ]
+}

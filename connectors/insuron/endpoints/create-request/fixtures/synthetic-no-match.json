@@ -1,0 +1,24 @@
+{
+    "name": "synthetic-insurance-request-no-match",
+    "description": "Synthetic public POST /open/requests unmatched response. No live request or credentials were used.",
+    "calls": [
+        {
+            "req": {
+                "method": "POST",
+                "url": "{{request.url}}"
+            },
+            "res": {
+                "status": 201,
+                "body": {
+                    "id": "a6c15f74-3b1f-4f56-a4ed-ef142b578c33",
+                    "status": "review_required",
+                    "product": "home",
+                    "state": "NY",
+                    "createdAt": "2026-01-02T00:00:00.000Z",
+                    "partnerId": null,
+                    "routeReason": "No verified licensed match available."
+                }
+            }
+        }
+    ]
+}

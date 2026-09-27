@@ -1,41 +1,30 @@
-import { defineProvider, presets } from "@shared/core";
+import { defineProvider } from "@shared/core";
 
 /**
- * Insuron's approved-application API. This connector only submits an
- * caller-attested insurance objective and reads that application's
- * public request status. It never sends phone/email contact details.
+ * Contactless public request submission for insurance matching.
  */
 export default defineProvider({
     name: "insuron",
     meta: {
         displayName: "Insuron",
         summary:
-            "Submit caller-attested insurance requests and read their public status.",
+            "Submit contactless insurance requests for licensed-agent matching.",
         description:
-            "Submit insurance objectives with a caller attestation and " +
-            "permission reference, then read public status scoped to an " +
-            "approved Insuron application. Consent is not independently " +
-            "verified by this connector.",
+            "Submit a structured insurance request using a product, state, " +
+            "and optional bounded coverage details.",
         homepageUrl: "https://insuron.io",
         docsUrl: "https://insuron.io",
         categories: ["insurance-matching"],
         notes: [
-            "A consumer's permission to share an insurance request does not " +
-            "authorize a phone call or SMS. This connector sends no " +
-            "phone or email fields and does not make calls, create quotes, " +
-            "or issue policies.",
-            "The bearer credential scopes to an approved Insuron application, " +
-            "not a Monid agent or workspace. Hosted credential-to-app " +
-            "isolation has NOT been verified. Do not use live network or " +
-            "share credentials until the host confirms the mapping, " +
-            "Insuron approves the application, and the caller retains " +
-            "auditable consent evidence. The connector requires the " +
-            "caller's attestation and reference; it does not verify consent.",
-            "Free-text objective and consentReference may contain sensitive " +
-            "content even though name, phone, and email fields are not accepted.",
+            "This is an open-access submission endpoint. It does not require " +
+            "approval or attest that consent has been obtained.",
+            "The response indicates a matching/review outcome only. An agent " +
+            "offer is not an accepted connection.",
         ],
     },
-    auth: { inject: presets.auth.bearer() },
+    // The Monid compiler requires an auth hook for every endpoint. This
+    // pass-through deliberately injects no credentials or headers.
+    auth: { inject: ({ data }) => data.request },
     request: {
         baseUrl: "https://insuron.io/api",
         headers: { Accept: "application/json" },
